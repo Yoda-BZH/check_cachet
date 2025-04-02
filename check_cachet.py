@@ -10,10 +10,10 @@ STATUS_WARN = 1
 STATUS_CRITICAL = 2
 STATUS_UNKNOWN = 3
 
+
 class CheckCachet():
-    #class_components = ["text-component-1", "text-component-2", "text-component-3", "text-component-4", "text-component-5"]
     class_components = ["list-group-item", "sub-component"]
-    #status_list = ["status-1", "status-2", "status-3", "status-4", "status-5"]
+
     status_code = {
             "status-1": STATUS_OK,
             "greens": STATUS_OK,
@@ -25,6 +25,7 @@ class CheckCachet():
             "status-5": STATUS_CRITICAL,
             "reds": STATUS_CRITICAL,
             }
+
     def __init__(self, url):
         self.url = url
         self.status_list = list(self.status_code.keys())
@@ -35,10 +36,10 @@ class CheckCachet():
             return (STATUS_UNKNOWN, f'Unable to request url "{self.url}"')
 
         html = bs4.BeautifulSoup(data.text, features="lxml")
-        items_list = html.find_all('li') #[class="text-component-1"]')
+        items_list = html.find_all('li')
         return_items = []
         for item in items_list:
-            #print("item:", item)
+            # print("item:", item)
             item_classes = item.get('class')
             if not item_classes:
                 continue
@@ -49,27 +50,30 @@ class CheckCachet():
             small_classes = small.get('class')
             item_text = item.get_text().strip()
             item_status = small.get_text().strip()
-            #print("item_classes", small_classes)
+            # print("item_classes", small_classes)
             class_status = list(set(self.status_list) & set(small_classes))
             if len(class_status) != 1:
                 print("multiple status class found ! Keeping first one")
-            #print("class status:", class_status)
+            # print("class status:", class_status)
             class_status = class_status[0]
             class_statuscode = self.status_code[class_status]
 
-            item_text = item_text if class_statuscode == STATUS_OK else f"{item_text}: {item_status}"
+            if class_statuscode != STATUS_OK:
+                item_text = f"{item_text}: {item_status}"
+
             return_items.append((class_statuscode, item_text),)
-            
+
         return return_items
 
 
 def run():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-u', '--url', type=str, help="URL to the cachet instance", required=True)
+    parser.add_argument('-u', '--url', type=str,
+                        help="URL to the cachet instance", required=True)
     parser.add_argument('-w', '--warning', default=0, type=int)
     parser.add_argument('-c', '--critical', default=0, type=int)
     args = parser.parse_args()
-    
+
     url = args.url
     if url[:4] != 'http':
         url = 'https://' + url
@@ -86,7 +90,7 @@ def run():
     items_warn = [x[1] for x in items if x[0] == STATUS_WARN]
     items_critical = [x[1] for x in items if x[0] == STATUS_CRITICAL]
     items_unknown = [x[1] for x in items if x[0] == STATUS_UNKNOWN]
-    
+
     result_string = []
     if items_unknown:
         result_string.append("UNKNOWN: " + ", ".join(items_unknown))
@@ -100,6 +104,6 @@ def run():
     print("\n".join(result_string))
     sys.exit(return_code)
 
+
 if __name__ == "__main__":
     run()
-
