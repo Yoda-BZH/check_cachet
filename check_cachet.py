@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
+"""
+    check_cachet.py
 
-import bs4
+    Nagios check to query cachet-powered status websites
+
+
+"""
+
 import sys
 import argparse
+
+import bs4
 import requests
 
 STATUS_OK = 0
@@ -12,6 +20,9 @@ STATUS_UNKNOWN = 3
 
 
 class CheckCachet():
+    """
+    Nagios check
+    """
     class_components = ["list-group-item", "sub-component"]
 
     status_code = {
@@ -30,8 +41,17 @@ class CheckCachet():
         self.url = url
         self.status_list = list(self.status_code.keys())
 
+    def request_url(self, url, timeout=10):
+        """
+        Query the website and return the requests Response object
+        """
+        return requests.get(url, timeout=timeout)
+
     def probe(self):
-        data = requests.get(self.url, timeout=10)
+        """
+        Run the probe
+        """
+        data = self.request_url(self.url, timeout=20)
         if int(data.status_code) != 200:
             return (STATUS_UNKNOWN, f'Unable to request url "{self.url}"')
 
@@ -67,6 +87,9 @@ class CheckCachet():
 
 
 def run():
+    """
+    run
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--url', type=str,
                         help="URL to the cachet instance", required=True)
@@ -84,7 +107,7 @@ def run():
     if not items:
         items.append((STATUS_UNKNOWN, 'Unable to parse "' + url + '".'),)
 
-    return_code = max([x[0] for x in items])
+    return_code = max(x[0] for x in items)
 
     items_ok = [x[1] for x in items if x[0] == STATUS_OK]
     items_warn = [x[1] for x in items if x[0] == STATUS_WARN]
