@@ -124,7 +124,13 @@ def run():
     if items_ok:
         result_string.append("OK: " + ", ".join(items_ok))
 
-    print("\n".join(result_string))
+    result_string.append(
+            f"| ok={len(items_ok)} "
+            f"warning={len(items_warn)} "
+            f"critical={len(items_critical)} "
+            f"unknown={len(items_unknown)}"
+    )
+    print(" -- ".join(result_string))
     sys.exit(return_code)
 
 
